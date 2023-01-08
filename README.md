@@ -128,5 +128,116 @@ with DAG(
 
 ### Create a connection
 
+Any operator in Airflow DAG interacts with external service needs a connection.
+
+This is to be defined in Admin --> Connection in Airflow UI.
+
+### Tesing the DAG
+
+It is always recommended to test the task and schedule from the airflow CLI.
+
+To do that, we need to execute the below set of commands.
+
+```
+docker-compose ps : It will show all the container
+
+docker exec -it materials_airflow-scheduler_1 /bin/bash : Containers responsible for scheduling. From here you can access the airflow CLI
 
 
+airflow -h : All the commands with airflow CLI
+
+airflow tasks test user_processing create_table 2022-01-01
+
+```
+Press : ctrl + d to go back to the original container.
+
+### The Sensors
+Wait for something to happen or change.
+
+2 parameters 
+1. poke_interval : 60 sec by default, every 60 seconds the sensor checks if the connection is true or not.
+
+2. timeout : by default 7 days
+
+
+### Is API available
+
+To check if the the api is available or not.
+
+```
+from airflow.providers.http.sensors.http import HttpSensor
+
+is_api_available =HttpSensor(
+
+    task_id = 'is_api_available',
+    http_connection_id = 'user_api',
+    endpoint = 'api/'
+)
+
+
+```
+
+
+### Extract Users
+
+```
+from airflow.providers.http.sensors.http import SimpleHttpOperator
+import json
+
+
+extact_user = SimpleHttpOperator(
+
+    task_id = 'extact_user',
+    http_conn_ id = 'user_api',
+    enpoint = 'api/',
+    method = 'GET',
+    response_filter = lambda response: json.loads(response.text),
+    log_response = True
+    )
+
+
+
+```
+
+### Process Users
+
+Use PythonOperator to execute python functions.
+
+```
+from airflow.operators.python import PythonOperator
+from pandas import json_normalize
+
+def _process_users(ti):
+    user = ti.xcom_pull(task_ids="extract_user")
+    user = user['results'][0]
+    processed_user = json_normalize({
+        'firstname':user['name']['first'],
+        'lastname':user['name']['last'],
+        'country':user['location']['country'],
+        'username':user['login']['username'],
+        'password':user['login']['password'],
+        'email':user['email']  })
+    processed_user.to_csv('/tmp/processed_user.csv', index=None, header=False)
+    
+
+
+process_user = PythonOperator(
+
+    task_id = 'process_user',
+    python_callable = _process_user // This is the function to defined before the DAG
+
+
+
+)
+
+```
+
+### What is Hook
+
+Hooks allows us to easily interact with the external tools or services.
+
+### Create dependencies
+
+Need to use '>>' operator between two tasks to set dependencies.
+
+### DAG in action
