@@ -60,4 +60,73 @@ with DAG('user_processing', start_date=datetime(2022,1,1),
 6. Define the catchup parameter
 
 
+### Operators and its types
+
+Operators defines tasks.
+A single task is to be defined by a single operator.
+
+3 Types of operators:
+
+1. Action operator
+2. Transfer operator
+3. Sensor operator.
+
+### Providers
+
+Whenever you need to integrate 3rd party services you need the providers. 
+
+In such case we need to install the plug ins like:
+
+pip install apache-airflow-providers-snowflake
+pip install apache-airflow-providers-databricks
+pip install apache-airflow-providers-dbt
+pip install apache-airflow-providers-aws
+
+
+### Create a table
+
+In order to perform a SQL request to postgres database and create a table.
+
+```
+from airflow import DAG
+
+from airflow.providers.postgres.operators.postgres import PostgresOperator
+
+from date import datetime
+
+
+with DAG(
+
+    'user_processing',
+    start_date = datetime(2022,1,1),
+    schedule_interval='@daily',
+    catchup=False
+) as dag:
+
+    create_table = PostgresOperator(
+
+        task_id  = 'create_table',
+        postgres_conn_id = 'postgres',
+        sql=
+        '''
+            CREATE TABLE IF NOT EXISTS USERS
+            (
+                FIRST_NAME TEXT NOT null,
+                LAST_NAME TEXT NOT null,
+                COUNTRY TEXT NOT null,
+                USERNAME TEXT NOT null,
+                PASSWORD TEXT NOT null,
+                EMAIL TEXT NOT null
+            );
+        
+        '''
+
+    )
+
+
+```
+
+### Create a connection
+
+
 
