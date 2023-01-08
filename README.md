@@ -50,7 +50,14 @@ with DAG('user_processing', start_date=datetime(2022,1,1),
 ```
 
 
+### Steps in summary
 
+1. Import the DAG object
+2. Instantiate a the DAG object
+3. Define a unique dag id
+4. Define a start date
+5. Define a scheduled interval
+6. Define the catchup parameter
 
 
 
